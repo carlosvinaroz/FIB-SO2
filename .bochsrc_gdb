@@ -1,0 +1,17 @@
+# Find more info about the '.bochsrc' file in the
+# Bochs User Manual: http://bochs.sourceforge.net/doc/docbook/user/bochsrc.html
+megs: 16
+
+floppya: 1_44=./zeos.bin, status=inserted
+boot: floppy
+
+log: bochsout.txt
+panic: action=ask
+error: action=report
+info: action=report
+debug: action=ignore
+debugger_log: -
+
+port_e9_hack: enabled=1
+
+gdbstub: enabled=1, port=1234, text_base=0, data_base=0, bss_base=0
