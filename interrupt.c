@@ -91,13 +91,16 @@ void setIdt()
 
 void keyboard_routine(){
 	unsigned char aux = inb(0x60);
-	unsigned char character;	
-	if ( !(aux && 0x80) )
+	char character;	
+	if ( !(aux & 0x80) )
 	{ 
-		character = char_map[aux & 0x7F];
-		if( character == '\0') 
-			character = 'C';
-		printc_xy(10,10,character);
+		if(aux<98){ //Char_map Size
+			if(char_map[aux]=='\0') 
+				character='C';			
+			else character=char_map[aux];			
+		}
+		else character='C';
+		printc_xy(70,20,character);
 	}
 }
 
