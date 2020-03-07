@@ -5,6 +5,7 @@
 #include <libc.h>
 
 #include <types.h>
+#include <errno.h>
 
 int errno;
 
@@ -43,3 +44,22 @@ int strlen(char *a)
   return i;
 }
 
+void perror(void) {
+	char buffer[20] = "Error ";
+	write(1,buffer,strlen(buffer));
+	char bf2[20];
+	itoa(errno,bf2);
+	write(1,bf2,strlen(bf2));
+	if(errno == ENOSYS) {
+		char b_error[200] = " , Function not implemented\n";
+		write(1,b_error,strlen(b_error));
+	}
+	else if(errno == EFAULT) {
+		char b_error[200] = " , (buffer NULL ? )\n";
+		write(1,b_error,strlen(b_error));
+	}
+	else if(errno == EINVAL) {
+		char b_error[200] = " , (size < 0 ?)\n";
+		write(1,b_error,strlen(b_error));
+	}
+}
