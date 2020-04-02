@@ -72,19 +72,24 @@ int __attribute__((__section__(".text.main")))
 
   /*** DO *NOT* ADD ANY CODE IN THIS ROUTINE BEFORE THIS POINT ***/
 
-  printk("Kernel Loaded!\n");
+  zeos_ticks = 0; //MODIFICADO
+
+  printk("Kernel Loaded!    ");
 
 
   /* Initialize hardware data */
   setGdt(); /* Definicio de la taula de segments de memoria */
   setIdt(); /* Definicio del vector de interrupcions */
+
+  setMSR(); //NUEVO
+
   setTSS(); /* Definicio de la TSS */
 
   /* Initialize Memory */
   init_mm();
 
   /* Initialize an address space to be used for the monoprocess version of ZeOS */
-  monoprocess_init_addr_space(); /* TO BE DELETED WHEN THE PROCESS MANAGEMENT CODE TO BECOME MULTIPROCESS IS ADDED */
+  //monoprocess_init_addr_space(); /* TO BE DELETED WHEN THE PROCESS MANAGEMENT CODE TO BECOME MULTIPROCESS IS ADDED */
 
   /* Initialize Scheduling */
   init_sched();
@@ -97,9 +102,16 @@ int __attribute__((__section__(".text.main")))
   /* Move user code/data now (after the page table initialization) */
   copy_data((void *) KERNEL_START + *p_sys_size, usr_main, *p_usr_size);
 
-  printk("Carlos Rodriguez\n");
+
   printk("Entering user mode...");
 
+
+  //MI PRINT
+  printk("\nPrueba mensaje kernel: Sergio Aguado Cobos\n");
+  //char buff[200] = "\nPrueba mensaje: Sergio Aguado Cobos";
+  //printc(*buff);
+
+  zeos_init_auxjp(); //para juego de pruebas
   enable_int();
   /*
    * We return from a 'theorical' call to a 'call gate' to reduce our privileges
