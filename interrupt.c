@@ -29,7 +29,10 @@ char char_map[] =
   '2','3','0','\0','\0','\0','<','\0',
   '\0','\0','\0','\0','\0','\0','\0','\0',
   '\0','\0'
-};
+};  //size -> 98
+
+
+
 
 void setInterruptHandler(int vector, void (*handler)(), int maxAccessibleFromPL)
 {
@@ -83,13 +86,12 @@ void setIdt()
   idtR.limit = IDT_ENTRIES * sizeof(Gate) - 1;
   
   set_handlers();
-  setInterruptHandler(33, keyboard_handler, 0);
-  setTrapHandler(0x80, system_call_handler, 3);
-  setInterruptHandler(32, clock_handler ,0);
-  
 
   /* ADD INITIALIZATION CODE FOR INTERRUPT VECTOR */
 
+  //MODIFICADO
+  setInterruptHandler(33, keyboard_handler ,0);
+  setInterruptHandler(32, clock_handler ,0);
   set_idt_reg(&idtR);
 }
 
@@ -99,24 +101,36 @@ void setMSR() {
   writeMSR(0x176, (int) syscall_handler_sysenter);
 }
 
-void keyboard_routine(){
-	unsigned char aux = inb(0x60);
-	char character;	
-	if ( !(aux & 0x80) )
-	{ 
-		if(aux<98){ //Char_map Size
-			if(char_map[aux]=='\0') 
-				character='C';			
-			else character=char_map[aux];			
-		}
-		else character='C';
-		printc_xy(70,20,character);
-	}
+void keyboard_routine() {
+  current_act_user_system(); //actualizar ticks user
+  unsigned char tecla = inb(0x60);
+  char pulsado = tecla & 0b10000000; //MAKE
+  char resultado;
+  if (!pulsado){
+    if(tecla < 98) { //SIZE de char_map
+      if (char_map[tecla] == '\0') resultado = 'C';
+      else resultado = char_map[tecla];
+    }
+    else resultado = 'C';
+    int mx, my;
+    mx = 70;
+    my = 20;
+    printc_xy(mx,my,resultado);
+  }
+  /*if (!pulsado){
+    if(current->PID == 1) task_switch((union task_union *) idle_task);
+    else task_switch((union task_union *) task1);
+  }*/
+  current_act_system_user(); //actualizar stats
 }
 
 void clock_routine() {
+  current_act_user_system(); //actualizar ticks user
   ++zeos_ticks;
 
+  schedule();
   zeos_show_clock();
-}
 
+
+  current_act_system_user(); //actualizar stats
+}

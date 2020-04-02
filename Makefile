@@ -34,16 +34,16 @@ SYSOBJ = \
 	utils.o \
 	hardware.o \
 	list.o \
-	
+	task_switch.o \
 
-LIBZEOS = -L . -l zeos
+LIBZEOS = -L . -l zeos -l auxjp
 
 #add to USROBJ any object files required to complete the user program
 USROBJ = \
 	wrapper.o \
 	suma.o \
 	libc.o \
-	# libjp.a \
+	libjp.a \
 
 all:zeos.bin
 
@@ -72,6 +72,9 @@ suma.s: suma.S $(INCLUDEDIR)/asm.h $(INCLUDEDIR)/segment.h
 
 wrapper.s: wrapper.S $(INCLUDEDIR)/asm.h $(INCLUDEDIR)/segment.h
 	$(CPP) $(ASMFLAGS) -o $@ $<
+
+task_switch.s: task_switch.S $(INCLUDEDIR)/asm.h $(INCLUDEDIR)/segment.h
+	$(CPP) $(ASMFLAGS) -o $@ $<
 	
 sys_call_table.s: sys_call_table.S $(INCLUDEDIR)/asm.h $(INCLUDEDIR)/segment.h
 	$(CPP) $(ASMFLAGS) -o $@ $<
@@ -82,7 +85,7 @@ interrupt.o:interrupt.c $(INCLUDEDIR)/interrupt.h $(INCLUDEDIR)/segment.h $(INCL
 
 io.o:io.c $(INCLUDEDIR)/io.h
 
-sched.o:sched.c $(INCLUDEDIR)/sched.h
+sched.o:sched.c $(INCLUDEDIR)/sched.h 
 
 libc.o:libc.c $(INCLUDEDIR)/libc.h
 

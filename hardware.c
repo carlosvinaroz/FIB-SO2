@@ -104,6 +104,7 @@ __asm__ __volatile__(
   "sti"
   : /*no output*/
   : "i" (0xfc)       /* 0xFF = 11111111 -> all bits disabled */
+                     /* 0xFC = 11111100 -> keyboard + CLOCK*/
   : "%al" );
 }
 

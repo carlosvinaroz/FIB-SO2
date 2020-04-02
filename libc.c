@@ -44,6 +44,9 @@ int strlen(char *a)
   return i;
 }
 
+
+//NUEVO_MODIFICADO
+
 void perror(void) {
 	char buffer[20] = "Error ";
 	write(1,buffer,strlen(buffer));

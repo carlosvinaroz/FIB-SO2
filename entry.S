@@ -81,14 +81,14 @@ ENTRY(keyboard_handler)
 
 ENTRY(system_call_handler)
       SAVE_ALL                            #Save the current context
-      cmpl $0, %eax                       #Is syscall number negative?
+      cmpl $0, %eax                      #Is syscall number negative?
       jl err                              #If it is, jump to return an error
       cmpl $MAX_SYSCALL, %eax             #Is syscall greater than MAX_SYSCALL (4)?
       jg err                              #If it is, jump to return an error
       call *sys_call_table(, %eax, 0x04)  #Call the corresponding service routine
       jmp fin                             #Finish
 err:
-      movl $-ENOSYS, %eax                 #Move to EAX the ENOSYS error
+      movl $-ENOSYS, %eax                #Move to EAX the ENOSYS error
 fin:
       movl %eax, 0x18(%esp)               #Change the EAX value in the stack
       RESTORE_ALL                         #Restore the context
@@ -104,6 +104,11 @@ ENTRY(syscall_handler_sysenter) #sysenter
       push $__USER_CS
       push 4(%ebp)      #User return address
       SAVE_ALL
+
+      pushl %eax
+      call current_act_user_system #actualizar stats user_ticks
+      popl %eax
+
       cmpl $0, %eax
       jl sysenter_err
       cmpl $MAX_SYSCALL, %eax
@@ -114,6 +119,9 @@ sysenter_err:
       movl $-ENOSYS, %eax
 sysenter_fin:
       movl %eax, 0x18(%esp)
+      pushl %eax
+      call current_act_system_user #actualizar stats
+      popl %eax
       RESTORE_ALL
       movl (%esp), %edx   # Return address
       movl 12(%esp), %ecx  # User stack address
@@ -143,3 +151,8 @@ ENTRY(clock_handler)
       RESTORE_ALL
       iret
 
+
+ENTRY(ret_from_fork)
+      RESTORE_ALL
+      xor %eax, %eax
+        iret

@@ -1,4 +1,5 @@
 #include <sched.h>
+#include <list.h>
 
 void zeos_show_clock();
 
