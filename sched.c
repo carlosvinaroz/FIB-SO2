@@ -73,44 +73,42 @@ void init_idle (void)
 {
 	struct list_head *fir = list_first(&freequeue);
 	list_del(fir);
-	struct task_struct *pcb = list_head_to_task_struct(fir);
-	pcb->PID = get_new_PID();
-	allocate_DIR(pcb);
-	pcb->quantum = 5;
-	pcb->estado = ST_READY;
+	struct task_struct *ts = list_head_to_task_struct(fir);
+	ts->PID = ultimo_PID_assig++; //pid=0 la primera vez
+    	allocate_DIR(ts);	
+	ts->quantum = 5;
+	ts->estado = ST_READY;
 	//inicializar stats
-	inicializar_stats(&pcb->proc_stats);
-	union task_union *task_un;
-	task_un = (union task_union *) pcb;
-	task_un->stack[1023] = (DWord) &cpu_idle; //1023
-	task_un->stack[1022] = 0xCACA; //1022 -> KERNEL_STACK_SIZE-2 
-	pcb->Kernel_esp_task = (DWord) &task_un->stack[1022];
-
-	idle_task = pcb;
+	inicializar_stats(&ts->proc_stats);
+	union task_union *tu = (union task_union *) ts;
+	tu->stack[1023] = (unsigned long) &cpu_idle; //1023
+	tu->stack[1022] = 0xCACA; //1022 -> KERNEL_STACK_SIZE-2 
+	ts->Kernel_esp_task = (unsigned long) &tu->stack[1022];    
+    	//Para acceder facilmente al task_struct del idle process
+	idle_task = ts;
 }
 
 void init_task1(void)
 {
 	struct list_head *fir = list_first(&freequeue);
 	list_del(fir);
-	struct task_struct *pcb = list_head_to_task_struct(fir);
-	pcb->PID = get_new_PID();
-	pcb->quantum = 5;
-	quantum_restante = pcb->quantum;
-	pcb->estado = ST_RUN;
-	pcb->proc_stats.remaining_ticks = pcb->quantum;
+	struct task_struct *ts = list_head_to_task_struct(fir);
+	ts->PID = ultimo_PID_assig++; //pid=1 la primera vez
+    	allocate_DIR(ts);
+   	set_user_pages(ts);
+	ts->quantum = 5;
+	quantum_restante = 5;
+	ts->estado = ST_RUN;
+	//ts->proc_stats.remaining_ticks = ts->quantum;
+
 	//inicializar stats
-	inicializar_stats(&pcb->proc_stats);
+	inicializar_stats(&ts->proc_stats);
 
-	allocate_DIR(pcb);
-	set_user_pages(pcb);
-
-
-	union task_union *task_un = (union task_union *) pcb;
-	tss.esp0 = (DWord) &task_un->stack[1024]; //KERNEL_STACK_SIZE
+	union task_union *tu = (union task_union *) ts;
+	tss.esp0 = (unsigned long) &tu->stack[1024]; //KERNEL_STACK_SIZE
 	//tss.esp0 = (DWord) pcb+4096;
 	writeMSR(0x175,tss.esp0);
-	set_cr3(pcb->dir_pages_baseAddr);	
+	set_cr3(ts->dir_pages_baseAddr);
 }
 
 void init_sched()
@@ -119,7 +117,7 @@ void init_sched()
 	INIT_LIST_HEAD(&freequeue);
 	for (int i = 0; i < NR_TASKS; i++) {
 		task[i].task.PID = -1;
-		list_add_tail(&(task[i].task.list), &freequeue);
+		list_add_tail(&task[i].task.list, &freequeue);
 	}
 	INIT_LIST_HEAD(&readyqueue);
 }
@@ -135,9 +133,6 @@ struct task_struct* current()
   return (struct task_struct*)(ret_value&0xfffff000);
 }
 
-int get_new_PID() {
-	return ++ultimo_PID_assig;
-}
 
 void inner_task_switch(union task_union *new) {
 	tss.esp0 = (DWord) new->task.Kernel_esp_task;
